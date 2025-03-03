@@ -282,7 +282,8 @@ public:
     /// A function that takes two vertex IDs and returns true if the vertices
     /// (and faces or edges containing the vertices) can collide. By default all
     /// primitives can collide with all other primitives.
-    std::function<bool(size_t, size_t)> can_collide = default_can_collide;
+    std::function<bool(size_t, size_t)> can_collide =
+        [this](size_t i, size_t j) { return this->siqi_can_collide(i, j); };
 
 protected:
     // -----------------------------------------------------------------------
@@ -366,6 +367,8 @@ protected:
 private:
     /// @brief By default all primitives can collide with all other primitives.
     static int default_can_collide(size_t, size_t) { return true; }
+
+    bool siqi_can_collide(size_t, size_t) const;
 };
 
 } // namespace ipc

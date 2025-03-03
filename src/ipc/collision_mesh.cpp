@@ -6,6 +6,10 @@
 #include <ipc/utils/logger.hpp>
 #include <ipc/utils/unordered_map_and_set.hpp>
 
+#include <igl/vertex_components.h>
+
+#include <iostream>
+
 namespace ipc {
 
 CollisionMesh::CollisionMesh(
@@ -33,6 +37,11 @@ CollisionMesh::CollisionMesh(
     , m_faces(faces)
 {
     assert(include_vertex.size() == full_rest_positions.rows());
+
+    // can_collide = std::bind(
+    //     &CollisionMesh::siqi_can_collide, this, std::placeholders::_1,
+    //     std::placeholders::_2);
+
     const bool include_all_vertices = std::all_of(
         include_vertex.begin(), include_vertex.end(), [](bool b) { return b; });
 
@@ -473,6 +482,21 @@ Eigen::MatrixXi CollisionMesh::construct_faces_to_edges(
     }
 
     return faces_to_edges;
+}
+
+// ============================================================================/
+bool CollisionMesh::siqi_can_collide(size_t i, size_t j) const
+{
+    Eigen::VectorXi comp;
+    igl::vertex_components(m_edges, comp);
+    const int M = comp.maxCoeff();
+
+    // If the two vertices are in the same connected component, they can collide
+    // If at least one vertex is on the boundary, they can collide
+    // If the two vertices are in different connected components (not boundary),
+    // they cannot collide
+    return comp(i) == comp(j) || comp(i) / 2 == comp(j) / 2 || comp(i) == M
+        || comp(j) == M;
 }
 
 } // namespace ipc
